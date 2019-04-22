@@ -19,7 +19,7 @@ db.orm.init_app()
 
 
 def md5(payload):
-    return hashlib.md5(payload.encode(os.get('ENCODING', 'utf-8'))).hexdigest()
+    return hashlib.md5(payload.encode(os.getenv('ENCODING', 'utf-8'))).hexdigest()
 
 
 class CronJob():
