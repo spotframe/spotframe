@@ -9,13 +9,16 @@ from app.models import Payload
 
 api = Namespace('payloads', description='Payloads Endpoints')
 
+def get_payload_by_uuid(uuid):
+    payload = Payload.where('uuid', uuid).first()
+    return payload.serialize() if payload else {}
+
 
 class Payloads(Resource):
 
     def get(self, uuid):
         """Get a Payload"""
-        payload = Payload.where('payload', uuid).first()
-        return payload.serialize() if payload else {}
+        return get_payload_by_uuid(uuid)
 
     @api.doc(params={
         'body': {
