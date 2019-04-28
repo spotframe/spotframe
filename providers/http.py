@@ -6,20 +6,24 @@ import requests
 
 class Http(Provider):
     def __init__(self, **kwargs):
+        self.kwargs = kwargs
         self.url = kwargs.get('url', 'localhost')
         self.method = kwargs.get('method', 'GET')
         self.headers = kwargs.get('headers', {})
         self.text = bool(kwargs.get('force_text', False))
-        self.json = kwargs.get('json', {})
         self.parsers = kwargs.get('parsers', None)
 
     def run(self):
+        kwargs = {
+            k: v for k, v in self.kwargs.items()
+            if k in ('json')
+        }
 
         response = requests.request(
             url=self.url,
             method=self.method,
             headers=self.headers,
-            json=self.json
+            **kwargs
         )
 
         content = response.content if self.text else response.json()
