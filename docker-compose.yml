@@ -1,0 +1,75 @@
+version: '3'
+services:
+
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=spotframe
+      - POSTGRES_PASSWORD=spotframe
+      - POSTGRES_DB=spotframe
+    volumes:
+      - ./tmp/pg_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.7.14-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15674:15674
+    volumes:
+      - ./tmp/amnesia:/var/lib/rabbitmq
+
+  migrate:
+    image: spotframe
+    build:
+      context: .
+    command: migrate
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=spotframe
+      - DB_PASS=spotframe
+      - DB_NAME=spotframe
+    volumes:
+      - .:/app
+
+  api:
+    image: spotframe
+    build:
+      context: .
+    command: api
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - 5000:5000
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=spotframe
+      - DB_PASS=spotframe
+      - DB_NAME=spotframe
+      - BROKER_HOST=rabbitmq
+    volumes:
+      - .:/app
+
+  crontab:
+    image: spotframe
+    build:
+      context: .
+    command: cron
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=spotframe
+      - DB_PASS=spotframe
+      - DB_NAME=spotframe
+    volumes:
+      - .:/app
+
