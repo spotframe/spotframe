@@ -48,3 +48,11 @@ def map(data, fn):
         result[k] = v if type(v) in (dict, list) else fn(v)
 
     return result
+
+
+def flatten(data):
+    for e in data:
+        if isinstance(e, list):
+            yield from flatten(e)
+        else:
+            yield e

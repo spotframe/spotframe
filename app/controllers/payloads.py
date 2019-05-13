@@ -1,3 +1,5 @@
+import os
+
 import json
 import uuid
 
@@ -5,9 +7,11 @@ from flask import request
 from flask_restplus import Namespace, Resource, fields
 
 from app.models import Payload
-
+from db.broker import Broker
 
 api = Namespace('payloads', description='Payloads Endpoints')
+
+broker = Broker(host=os.getenv('BROKER_HOST'))
 
 def get_payload_by_uuid(uuid):
     payload = Payload.where('uuid', uuid).first()
@@ -30,10 +34,30 @@ class Payloads(Resource):
 
     def post(self):
         """Create a Payload"""
-        return Payload.create(
+        payload = Payload.create(
             uuid=str(uuid.uuid4()),
             payload=json.dumps(request.get_json())
-        ).serialize()
+        )
+
+        if payload:
+
+            queue = request.get_json().get('queue', 'incoming')
+            message = {'uuid': payload.uuid}
+
+            broker.channel().queue_declare(
+                queue=queue,
+                durable=True
+            )
+
+            message_sent = broker.publish(
+                routing_key=queue,
+                body=json.dumps(message),
+                properties=message
+            )
+
+            return message
+
+        return {}
 
 
 

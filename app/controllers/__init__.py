@@ -1,5 +1,6 @@
 from flask_restplus import Api
 
+from .entities import api as entities_api
 from .fetchers import api as fetchers_api
 from .backends import api as backends_api
 from .payloads import api as payloads_api
@@ -14,6 +15,7 @@ api = Api(
     doc='/swagger'
 )
 
+api.add_namespace(entities_api)
 api.add_namespace(fetchers_api)
 api.add_namespace(backends_api)
 api.add_namespace(payloads_api)

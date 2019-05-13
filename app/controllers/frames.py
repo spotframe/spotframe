@@ -31,16 +31,7 @@ class Frames(Resource):
 
             content = json.loads(payload.get('payload'))
 
-            backends = re.findall(
-                r"[Bb]ackend': '([^']+)'",
-                str(screens.get(content.get('entity')))
-            )
-
             return {
-                'backends': {
-                    b: get_backends(b) for b in backends
-                }
-                ,
                 'frames': {
                     screen: enhanced.map(
                         components,
