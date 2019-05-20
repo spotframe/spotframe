@@ -25,7 +25,10 @@ const htmlize = (data) => {
                 else {
                     switch (typeof(v)) {
                         case "object": {
-                            let props = Object.entries(v).map(([key, value]) => `${key}="${value}" `).join('')
+                            let props = Object.entries(v).map(([key, value]) =>
+                                `${key}=${(typeof(value) === 'boolean' ? `{${value}}` : `"${value}"`)} `
+                            ).join('')
+
                             output.push(`<${k} ${props}/>`)
                             break
                         }

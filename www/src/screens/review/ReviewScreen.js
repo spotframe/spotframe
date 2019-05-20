@@ -124,11 +124,11 @@ TabContainer.propTypes = {
 class ReviewScreen extends Component {
 
   state = {
+    uuid: null,
     value: 0,
     message: null,
     messages: [],
     frames: {},
-    backends: {},
     expanded: null,
     broker: null,
     expire: false,
@@ -185,10 +185,12 @@ class ReviewScreen extends Component {
                     messages: this.state.messages.slice(1)
                   })
 
-                  axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${JSON.parse(first.body).uuid}`)
+                  const uuid = JSON.parse(first.body).uuid
+                  this.setState({ uuid })
+
+                  axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
                     .then(res => { this.setState({
                       frames: res.data.frames,
-                      backends: res.data.backends
                     }) })
 
                 }
@@ -226,7 +228,7 @@ class ReviewScreen extends Component {
     this.setState({
       message: null,
       frames: {},
-      backends: {},
+      uuid: null,
     })
 
     if (messages.length !== 0) {
@@ -237,10 +239,12 @@ class ReviewScreen extends Component {
         messages: this.state.messages.slice(1),
       })
 
-      axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${JSON.parse(first.body).uuid}`)
+      const uuid = JSON.parse(first.body).uuid
+      this.setState({ uuid })
+
+      axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
         .then(res => { this.setState({
           frames: res.data.frames,
-          backends: res.data.backends
         }) })
     }
   }
@@ -306,9 +310,14 @@ class ReviewScreen extends Component {
                 <TabContainer key={index} id={`cont${index}`}>
                   <JsxParser
                       bindings={{
+                        uuid: this.state.uuid,
                       }}
                       components={All}
-                      jsx={Helpers.htmlize(components)}
+                      jsx={
+                        Helpers
+                          .htmlize(components)
+                          .replace(/(With(Fetcher|Action))/g, '$1 uuid={uuid}')
+                      }
                     />
                 </TabContainer>
               )
