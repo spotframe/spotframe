@@ -29,9 +29,11 @@ def translate(text, payload):
 
 
 def map(data, fn):
+    _types = (dict, list, bool)
+
     def _map(_values):
         return [
-            map(e, fn) if type(e) in (dict, list) else fn(e)
+            map(e, fn) if type(e) in _types else fn(e)
             for e in _values
         ]
 
@@ -45,7 +47,7 @@ def map(data, fn):
             v = map(v, fn)
         if isinstance(v, list):
             v = _map(v)
-        result[k] = v if type(v) in (dict, list) else fn(v)
+        result[k] = v if type(v) in _types else fn(v)
 
     return result
 
