@@ -19,12 +19,14 @@ def get(payload, path=str()):
 
 
 def translate(text, payload):
-    return re.sub(
-        r'{([^}]+)}',
-        lambda m: str(
-            get(payload, m.group(1))
-        ),
-        text
+    return (
+        re.sub(
+            r'{([^}]+)}',
+            lambda m: str(get(payload, m.group(1))),
+            text
+        )
+        if isinstance(text, str)
+        else text
     )
 
 
