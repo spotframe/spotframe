@@ -28,7 +28,13 @@ class Payloads(Resource):
         'body': {
             'in': 'body',
             'required': True,
-            'description': '{"entity": "Entity Type", "payload": "{""}"}'
+            'description': 'Create a Payload',
+            'example': {
+                'entity': 'Entity Type',
+                'queue': '',
+                'payload': {}
+            }
+
         }
     })
 
@@ -41,7 +47,7 @@ class Payloads(Resource):
 
         if payload:
 
-            queue = request.get_json().get('queue', 'incoming')
+            queue = request.get_json().get('queue') or 'incoming'
             message = {'uuid': payload.uuid}
 
             broker.channel().queue_declare(

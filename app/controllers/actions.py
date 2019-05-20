@@ -10,19 +10,19 @@ from providers import *
 from app.models import Payload
 
 
-api = Namespace('fetchers', description='Fetchers Endpoints')
+api = Namespace('actions', description='Actions Endpoints')
 
-fetchers = {}
+actions = {}
 
 with open('./DSL/integrations.yaml') as file:
-    fetchers = yaml.safe_load(file).get('fetchers')
+    actions = yaml.safe_load(file).get('actions')
 
 
 
-class Fetchers(Resource):
+class Actions(Resource):
 
-    def get(self, fetch, uuid):
-        """Get Fetchers"""
+    def post(self, action, uuid):
+        """Post Actions"""
 
         payload = Payload.where('uuid', uuid).first()
 
@@ -30,7 +30,7 @@ class Fetchers(Resource):
             content = json.loads(payload.payload)
 
             params = enhanced.map(
-                fetchers.get(fetch),
+                actions.get(action),
                 lambda t: enhanced.translate(t, content.get('payload', {}))
             )
 
@@ -44,6 +44,6 @@ class Fetchers(Resource):
 
 
 api.add_resource(
-    Fetchers,
-    '/<string:fetch>/<string:uuid>',
-    methods=['GET'])
+    Actions,
+    '/<string:action>/<string:uuid>',
+    methods=['POST'])
