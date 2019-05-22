@@ -54,6 +54,8 @@ services:
       - DB_PASS=spotframe
       - DB_NAME=spotframe
       - BROKER_HOST=rabbitmq
+      - BROKER_USER=guest
+      - BROKER_PASS=guest
     volumes:
       - .:/app
 

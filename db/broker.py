@@ -1,4 +1,6 @@
+import os
 import pika
+import requests
 
 
 class Broker:
@@ -18,15 +20,23 @@ class Broker:
         self.user = username
         self.passwd = password
 
-    def publish(self, routing_key, body, properties={}, exchange=str()):
+
+    def publish(
+        self,
+        routing_key,
+        body,
+        properties={},
+        exchange=str(),
+    ):
         return self.channel().basic_publish(
             exchange=exchange,
             routing_key=routing_key,
             properties=pika.BasicProperties(
                 headers=properties
             ),
-            body=body
+            body=body,
         )
+
 
     def channel(self):
 
@@ -56,3 +66,46 @@ class Broker:
             self.chan.confirm_delivery()
 
         return self.chan
+
+
+    def get_queues(self, vhost):
+        response = requests.get(
+            url=f'http://{self.host}:1{self.port}/api/queues/{vhost}',
+            auth=(self.user, self.passwd)
+        )
+
+        return response.json()
+
+
+    def create_vhost(self, vhost):
+        url = f'http://{self.host}:1{self.port}/api/vhosts/{vhost}'
+
+        try:
+
+            response = requests.put(
+                url, auth=(self.user, self.passwd)
+            )
+
+            response.raise_for_status()
+
+        except Exception as e:
+            print('NEW_VHOST', e)
+
+        try:
+
+            url = f'http://{self.host}:1{self.port}/api/permissions/{vhost}/{self.user}'
+
+            response = requests.put(
+                url,
+                json={
+                    'configure': '.*',
+                    'write': '.*',
+                    'read': '.*',
+                },
+                auth=(self.user, self.passwd),
+            )
+
+            response.raise_for_status()
+
+        except Exception as e:
+            print('NEW_PERMISSIONS', e)

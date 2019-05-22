@@ -11,7 +11,8 @@ from db.broker import Broker
 
 api = Namespace('payloads', description='Payloads Endpoints')
 
-broker = Broker(host=os.getenv('BROKER_HOST'))
+brokers = {}
+
 
 def get_payload_by_uuid(uuid):
     payload = Payload.where('uuid', uuid).first()
@@ -40,6 +41,8 @@ class Payloads(Resource):
 
     def post(self):
         """Create a Payload"""
+        entity = request.get_json().get('entity')
+
         payload = Payload.create(
             uuid=str(uuid.uuid4()),
             payload=json.dumps(request.get_json())
@@ -50,12 +53,25 @@ class Payloads(Resource):
             queue = request.get_json().get('queue') or 'incoming'
             message = {'uuid': payload.uuid}
 
-            broker.channel().queue_declare(
-                queue=queue,
-                durable=True
+            broker = brokers.get(
+                entity,
+                Broker(
+                    host=os.getenv('BROKER_HOST'),
+                    port=os.getenv('BROKER_PORT'),
+                    username=os.getenv('BROKER_USER'),
+                    password=os.getenv('BROKER_PASS'),
+                    vhost=entity
+                )
             )
 
-            message_sent = broker.publish(
+            if not brokers.get(entity):
+                brokers.update({ entity: broker })
+
+            brokers.get(entity).channel().queue_declare(
+                queue=queue, durable=True
+            )
+
+            message_sent = brokers.get(entity).publish(
                 routing_key=queue,
                 body=json.dumps(message),
                 properties=message
