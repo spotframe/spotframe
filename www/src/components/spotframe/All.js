@@ -8,6 +8,8 @@ import Tag from './commons/Tag'
 import SelectWithBackend from './with_backend/SelectWithBackend'
 
 import LabelWithFetcher from './with_fetcher/LabelWithFetcher'
+import TernaryLabelWithFetcher from './with_fetcher/TernaryLabelWithFetcher'
+import TernaryTagWithFetcher from './with_fetcher/TernaryTagWithFetcher'
 
 import ButtonWithAction from './with_action/ButtonWithAction'
 
@@ -22,6 +24,8 @@ const All = {
 	SelectWithBackend,
 
 	LabelWithFetcher,
+	TernaryLabelWithFetcher,
+	TernaryTagWithFetcher,
 
 	ButtonWithAction,
 }
