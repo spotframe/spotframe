@@ -21,7 +21,6 @@ class Broker:
         self.user = username
         self.passwd = password
 
-
     def publish(
         self,
         routing_key,
@@ -33,20 +32,19 @@ class Broker:
             exchange=exchange,
             routing_key=routing_key,
             properties=pika.BasicProperties(
-                headers=properties
+                delivery_mode=2, headers=properties
             ),
             body=body,
         )
-
 
     def channel(self):
 
         if self.conn:
             try:
                 self.conn.process_data_events()
-            except Exception as e:
+            except Exception:
                 self.conn = None
-                traceback.print_exc()
+                pass
 
         if not self.conn or not self.conn.is_open:
             self.conn = pika.BlockingConnection(
@@ -68,15 +66,13 @@ class Broker:
 
         return self.chan
 
-
     def get_queues(self, vhost):
         response = requests.get(
             url=f'http://{self.host}:1{self.port}/api/queues/{vhost}',
-            auth=(self.user, self.passwd)
+            auth=(self.user, self.passwd),
         )
 
         return response.json()
-
 
     def create_vhost(self, vhost):
         url = f'http://{self.host}:1{self.port}/api/vhosts/{vhost}'
