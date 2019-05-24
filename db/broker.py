@@ -1,7 +1,6 @@
 import os
 import pika
 import requests
-import traceback
 
 
 class Broker:
