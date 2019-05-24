@@ -10,6 +10,7 @@ import { withStyles } from '@material-ui/core/styles'
 
 import IconButton from '@material-ui/core/IconButton'
 import ArrowBack from '@material-ui/icons/ArrowBack'
+import ArrowRight from '@material-ui/icons/ArrowRight'
 import ChevronRight from '@material-ui/icons/ChevronRight'
 import Inbox from '@material-ui/icons/Inbox'
 
@@ -101,6 +102,15 @@ const styles = theme => ({
   inboxIcon: {
     width: 48,
     height: 48,
+  },
+
+  queueTitle: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  arrowDivider: {
+    color: "#1565c0",
   }
 
 })
@@ -156,8 +166,9 @@ class ReviewScreen extends Component {
 
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/queues/${entity}`)
       .then(res => {
+
         let queues = Object.fromEntries(
-          Object.entries(res.data[group][queue]).map(
+          Object.entries(res.data[decodeURIComponent(group)][decodeURIComponent(queue)]).map(
             ([key, params]) => ([key, (params ? params.messages : null)])
           )
         )
@@ -278,9 +289,16 @@ class ReviewScreen extends Component {
               <ArrowBack onClick={() => this.setState({expire: true})} />
             </Link>
           </IconButton>
-          <Typography variant="h6" color="inherit" className={classes.grow}>
-            {this.props.match.params.group} / {this.props.match.params.queue}
-          </Typography>
+          <div className={classes.queueTitle}>
+            <Typography variant="h6" color="inherit" className={classes.grow}>
+              {decodeURIComponent(this.props.match.params.group)}
+            </Typography>
+            <ArrowRight className={classes.arrowDivider} />
+            <Typography variant="h6" color="inherit" className={classes.grow}>
+              {decodeURIComponent(this.props.match.params.queue)}
+            </Typography>
+          </div>
+
 
         </MainBar>
 

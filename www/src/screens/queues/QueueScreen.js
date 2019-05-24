@@ -139,7 +139,7 @@ class QueueScreen extends Component {
                                   <b>
                                     <Link
                                       query=""
-                                      to={`/entities/${this.props.match.params.entity}/queues/${group}/${virtual}`}
+                                      to={`/entities/${this.props.match.params.entity}/queues/${encodeURIComponent(group)}/${encodeURIComponent(virtual)}`}
                                       style={{textDecoration: 'none'}}
                                     >
                                       {virtual}
