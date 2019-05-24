@@ -10,7 +10,11 @@ import Badge from '@material-ui/core/Badge'
 
 import MainBar from '../../components/MainBar'
 import IconButton from '@material-ui/core/IconButton'
+
 import ArrowBack from '@material-ui/icons/ArrowBack'
+import Person from '@material-ui/icons/Person'
+import BlurOn from '@material-ui/icons/BlurOn'
+
 
 import ExpansionPanel from '@material-ui/core/ExpansionPanel'
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
@@ -56,7 +60,24 @@ const styles = theme => ({
     marginLeft: -12,
     marginRight: 20,
   },
+  person: {
+    marginLeft: 30,
+    color: '#999'
+  }
 });
+
+
+const StyledBadge = withStyles(theme => ({
+  badge: {
+    top: '50%',
+    right: -3,
+    // The border color match the background color.
+    border: `2px solid ${
+      theme.palette.type === 'light' ? theme.palette.grey[200] : theme.palette.grey[900]
+    }`,
+  },
+}))(Badge);
+
 
 
 class QueueScreen extends Component {
@@ -125,16 +146,26 @@ class QueueScreen extends Component {
                         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
                           <Typography className={classes.heading}>
 
-                            <Badge
+                            <StyledBadge
                               badgeContent={Object.entries(queues || {}).map(([_, props]) => (props ? props.messages_ready : 0)).reduce((p, n) => p + n, 0)}
                               max={999999}
                               color="secondary"
                               classes={{ badge: classes.badge }}
                             >
-                            &nbsp;
-                            </Badge>
+                              <BlurOn />
+                            </StyledBadge>
 
-                            <span style={{marginLeft: 40, color: '#bbb'}}>
+
+                            <StyledBadge
+                              badgeContent={Object.entries(queues || {}).map(([_, props]) => (props ? props.consumers : 0)).reduce((p, n) => p + n, 0)}
+                              color="primary"
+                              className={classes.person}
+                            >
+                              <Person />
+                            </StyledBadge>
+
+
+                            <span style={{marginLeft: 70, color: '#bbb'}}>
                                 {(queues ?
                                   <b>
                                     <Link
