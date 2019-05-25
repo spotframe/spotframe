@@ -43,55 +43,60 @@ class CronJob():
             backend=self.name, schedule=self.params.get('schedule'))
 
         while True:
+
             tracing = str(uuid.uuid4()).split('-')[-1]
-            print(f'({tracing}) {verbose} - Performing background Job...')
 
-            provider = self.params.get('provider')
-            response = globals()[provider.capitalize()](**self.params).run()
+            try:
+                print(f'({tracing}) {verbose} - Performing background Job...')
 
-            checksum = md5(str(response))
-            
-            print(f'({tracing}) {verbose} - {len(response)} entries fetched from backend')
-            print(f'({tracing}) {verbose} - Computing checksum against the previous one...')
+                provider = self.params.get('provider')
+                response = globals()[provider.capitalize()](**self.params).run()
 
-            backend = Backend.first_or_new(backend=self.name)
+                checksum = md5(str(response))
 
-            if not backend.exists:
-                backend.last_version = 0
-                backend.save()
+                print(f'({tracing}) {verbose} - {len(response)} entries fetched from backend')
+                print(f'({tracing}) {verbose} - Computing checksum against the previous one...')
 
-            version = Version.first_or_new(
-                backend_id=backend.id,
-                version=backend.last_version,
-                checksum=checksum
-            )
+                backend = Backend.first_or_new(backend=self.name)
 
-            if version.exists:
-                print(f'({tracing}) {verbose} - No new content! skiping this version')
+                if not backend.exists:
+                    backend.last_version = 0
+                    backend.save()
 
-            else:
-                new_version = backend.last_version + 1
-                version.version = new_version
-                version.save()
+                version = Version.first_or_new(
+                    backend_id=backend.id,
+                    version=backend.last_version,
+                    checksum=checksum
+                )
 
-                if response and isinstance(response, dict):
-
-                    print(f'({tracing}) {verbose} - New content! Creating version {self.name}->{new_version}')
-
-                    backend.update(last_version=new_version)
-
-                    for key, value in response.items():
-                        Entry.create(
-                            backend_id=backend.id,
-                            version_id=version.id,
-                            version=new_version,
-                            key=key,
-                            value=value
-                        )
+                if version.exists:
+                    print(f'({tracing}) {verbose} - No new content! skiping this version')
 
                 else:
-                    print(f'({tracing}) {verbose} - ERROR MALFORMED PAYLOAD: {response}')
+                    new_version = backend.last_version + 1
+                    version.version = new_version
+                    version.save()
 
+                    if response and isinstance(response, dict):
+
+                        print(f'({tracing}) {verbose} - New content! Creating version {self.name}->{new_version}')
+
+                        backend.update(last_version=new_version)
+
+                        for key, value in response.items():
+                            Entry.create(
+                                backend_id=backend.id,
+                                version_id=version.id,
+                                version=new_version,
+                                key=key,
+                                value=value
+                            )
+
+                    else:
+                        print(f'({tracing}) {verbose} - ERROR MALFORMED PAYLOAD: {response}')
+
+            except Exception as e:
+                print(f'({tracing}) {verbose} - Exception: {e}')
 
             time.sleep(self.time)
 
