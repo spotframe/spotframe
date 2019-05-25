@@ -22,6 +22,8 @@ import Tab from '@material-ui/core/Tab'
 import Tabs from '@material-ui/core/Tabs'
 import Typography from '@material-ui/core/Typography'
 import NoSsr from '@material-ui/core/NoSsr'
+import NativeSelect from '@material-ui/core/NativeSelect'
+import OutlinedInput from '@material-ui/core/OutlinedInput'
 
 import JsxParser from 'react-jsx-parser'
 import All from '../../components/spotframe/All'
@@ -86,9 +88,17 @@ const styles = theme => ({
     margin: theme.spacing.unit,
   },
 
-  nextButton: {
+  actionBar: {
     display: 'flex',
-    flexDirection: 'row-reverse',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+    marginRight: 10
+  },
+
+  moveToQueue: {
+    width: 250,
+    height: 36,
+    margin: 8,
   },
 
   noMessages: {
@@ -146,7 +156,7 @@ class ReviewScreen extends Component {
     timeout: null,
     entity_idle: null,
     time_to_expire: 0,
-
+    moving_queues: {},
   }
 
   componentWillUnmount() {
@@ -177,6 +187,8 @@ class ReviewScreen extends Component {
 
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/queues/${entity}`)
       .then(res => {
+
+        this.setState({ moving_queues: res.data })
 
         let queues = Object.fromEntries(
           Object.entries(res.data[decodeURIComponent(group)][decodeURIComponent(queue)]).map(
@@ -393,7 +405,35 @@ class ReviewScreen extends Component {
 
         </div>
 
-        <div className={classes.nextButton}>
+        <div className={classes.actionBar}>
+
+          <NativeSelect
+            className={classes.moveToQueue}
+            // onChange={(event) => { this.setState({ selectedMoveToQueue: event.target.value })}}
+            input={<OutlinedInput labelWidth={0} />}
+            name="moveToQueue"
+            // value={this.state.selectedMoveToQueue}
+          >
+
+            <option hidden >&nbsp;&nbsp;&nbsp;&nbsp;Move to Queue...</option>
+
+            {
+              Object.entries(this.state.moving_queues).map(([group, virtual]) =>
+                Object.entries(virtual).map(([vname, queues], _) => !queues ? null :
+                  [
+                    <option key={_} disabled>{group} - {vname}</option>,
+                    Object.keys(queues || {}).map((queue, _) =>
+                      <option key={_} value={queue}>
+                        &nbsp;&nbsp;&nbsp;&nbsp;{queue}
+                      </option>
+                    ),
+                    <option key={`_${_}`} disabled></option>
+                  ]
+                )).flat()
+            }
+
+          </NativeSelect>
+
           <Button
             variant="contained"
             color="primary"
