@@ -1,3 +1,4 @@
+/* eslint no-eval: 0 */
 import React, { Component } from 'react'
 import axios from 'axios'
 

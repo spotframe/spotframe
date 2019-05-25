@@ -1,3 +1,4 @@
+/* eslint no-eval: 0 */
 import React, { Component } from 'react'
 import axios from 'axios'
 
@@ -9,16 +10,24 @@ const styles = theme => ({
 });
 
 class TernaryLabelWithFetcher extends Component {
+
+  signal = axios.CancelToken.source()
+
   state = {
     response: null,
   }
 
   componentDidMount() {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetchers/${this.props.Fetcher}/${this.props.uuid}`)
+    axios.get(
+      `${process.env.REACT_APP_BACKEND_URL}/fetchers/${this.props.Fetcher}/${this.props.uuid}`,
+      { cancelToken: this.signal })
       .then(res => { this.setState({ response: res.data }) })
+      .catch(err => {})
   }
 
-
+  componentWillUnmount() {
+    this.signal.cancel()
+  }
 
   render() {
 

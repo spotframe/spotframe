@@ -61,6 +61,9 @@ const styles = theme => ({
 });
 
 class SelectWithBackend extends Component {
+
+  signal = axios.CancelToken.source()
+
   state = {
     value: '',
     values: {}
@@ -71,8 +74,15 @@ class SelectWithBackend extends Component {
   };
 
   componentDidMount() {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/backends/${this.props.Backend}`)
-      .then(res => { this.setState({ values: res.data }) })
+      axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/backends/${this.props.Backend}`,
+        { cancelToken: this.signal.token })
+        .then(res => { this.setState({ values: res.data }) })
+        .catch(err => {})
+  }
+
+  componentWillUnmount() {
+    this.signal.cancel()
   }
 
   render() {

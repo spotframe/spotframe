@@ -24,15 +24,17 @@ import MainBar from '../../components/MainBar'
 
 const styles = theme => ({
   entity_screen: {
-    display: 'flow-root',
+    display: 'inline-block',
     marginLeft: 100,
     marginRight: 100,
     marginTop: 75,
     marginBottom: 75,
   },
   card: {
-    maxWidth: 400,
-    margin: 20
+    display: 'inline-block',
+    width: 400,
+    minHeight: 160,
+    margin: 20,
   },
   media: {
     height: 0,
@@ -66,6 +68,10 @@ const styles = theme => ({
       backgroundColor: "transparent"
     }
   },
+
+  descText: {
+    overflowWrap: 'break-word',
+  }
 
 });
 
@@ -127,7 +133,7 @@ class EntityScreen extends Component {
                   />
 
                   <CardContent>
-                    <Typography component="p">
+                    <Typography component="p" className={classes.descText}>
                       {properties.desc}
                     </Typography>
                   </CardContent>

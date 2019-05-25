@@ -115,7 +115,6 @@ const styles = theme => ({
 
 })
 
-const timeToReview = 0
 
 function TabContainer(props) {
   return (
@@ -144,16 +143,28 @@ class ReviewScreen extends Component {
     expire: false,
     queues: [],
     interval: null,
+    timeout: null,
+    entity_idle: null,
+    time_to_expire: 0,
+
   }
 
   componentWillUnmount() {
-    this.state.broker.disconnect()
-    this.setState({broker: null})
+    if (this.state.broker !== null) {
+      this.state.broker.disconnect()
+      this.setState({broker: null})
+    }
+    if (this.state.timeout !== null) {
+      clearTimeout(this.state.timeout)
+    }
   }
 
   componentDidMount() {
 
     let { entity, group, queue } = this.props.match.params
+
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/entities/${entity}`)
+      .then(res => this.setState({ entity_idle: res.data.idle }))
 
     var broker = webstomp.client(
       `ws://${process.env.REACT_APP_BROKER_HOST}:15674/ws`
@@ -200,9 +211,13 @@ class ReviewScreen extends Component {
                   this.setState({ uuid })
 
                   axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
-                    .then(res => { this.setState({
-                      frames: res.data.frames,
-                    }) })
+                    .then(res => {
+                      this.setState({
+                        frames: res.data.frames,
+                        time_to_expire: this.state.entity_idle,
+                      })
+                      this.scheduleExpire(this.state.entity_idle)
+                    })
 
                 }
 
@@ -244,7 +259,10 @@ class ReviewScreen extends Component {
       message: null,
       frames: {},
       uuid: null,
+      time_to_expire: 0,
     })
+
+    clearTimeout(this.state.timeout)
 
     if (messages.length !== 0) {
       let first = messages[0]
@@ -258,9 +276,23 @@ class ReviewScreen extends Component {
       this.setState({ uuid })
 
       axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
-        .then(res => { this.setState({
-          frames: res.data.frames,
-        }) })
+        .then(res => {
+          this.setState({
+            frames: res.data.frames,
+            time_to_expire: this.state.entity_idle,
+          })
+          this.scheduleExpire(this.state.entity_idle)
+        })
+    }
+  }
+
+  scheduleExpire = (seconds) => {
+    if (seconds !== null && seconds !== undefined) {
+      this.setState({
+        timeout: setTimeout(() => {
+          this.setState({ expire: true })
+        }, 1000 * seconds)
+      })
     }
   }
 
@@ -270,8 +302,6 @@ class ReviewScreen extends Component {
     const { value } = this.state
 
     if (this.state.expire) {
-      this.state.broker.disconnect()
-      this.setState({broker: null})
       return <Redirect to={`/entities/${this.props.match.params.entity}/queues`} query="" />
     }
 
@@ -286,7 +316,10 @@ class ReviewScreen extends Component {
               query=""
               style={{textDecoration: 'none', color: 'white', height: 24}}
             >
-              <ArrowBack onClick={() => this.setState({expire: true})} />
+              <ArrowBack onClick={() => {
+                this.setState({expire: true})
+                return <Redirect to={`/entities/${this.props.match.params.entity}/queues`} query="" />
+              }} />
             </Link>
           </IconButton>
           <div className={classes.queueTitle}>
@@ -302,7 +335,9 @@ class ReviewScreen extends Component {
 
         </MainBar>
 
-        <TimeoutBar minutes={timeToReview} />
+        { /* Meanwhile we need to keep these 2 calls, don't use ternary neither coalesce here */ }
+        { this.state.time_to_expire  ? <TimeoutBar seconds={this.state.time_to_expire} /> : null }
+        { !this.state.time_to_expire ? <TimeoutBar seconds={0} /> : null }
 
         <div className={classes.root}>
           <Tabs
@@ -354,7 +389,7 @@ class ReviewScreen extends Component {
                 There is no messages by now...
               </Typography>
             </div>
-            : '') }
+            : null) }
 
         </div>
 
