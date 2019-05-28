@@ -25,9 +25,14 @@ import NoSsr from '@material-ui/core/NoSsr'
 import NativeSelect from '@material-ui/core/NativeSelect'
 import OutlinedInput from '@material-ui/core/OutlinedInput'
 
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+
 import JsxParser from 'react-jsx-parser'
 import All from '../../components/spotframe/All'
-
 
 
 const styles = theme => ({
@@ -97,7 +102,6 @@ const styles = theme => ({
 
   moveToQueue: {
     width: 250,
-    height: 36,
     margin: 8,
   },
 
@@ -144,6 +148,8 @@ class ReviewScreen extends Component {
 
   state = {
     uuid: null,
+    customStates: {},
+    backends: {},
     value: 0,
     message: null,
     messages: [],
@@ -157,6 +163,9 @@ class ReviewScreen extends Component {
     entity_idle: null,
     time_to_expire: 0,
     moving_queues: {},
+    queue_to_move: '',
+    queue_dialog: false,
+    placement: null,
   }
 
   componentWillUnmount() {
@@ -222,14 +231,10 @@ class ReviewScreen extends Component {
                   const uuid = JSON.parse(first.body).uuid
                   this.setState({ uuid })
 
-                  axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
-                    .then(res => {
-                      this.setState({
-                        frames: res.data.frames,
-                        time_to_expire: this.state.entity_idle,
-                      })
-                      this.scheduleExpire(this.state.entity_idle)
-                    })
+                  this.getFramesByUUID(uuid)
+
+                  this.setState({ time_to_expire: this.state.entity_idle })
+                  this.scheduleExpire(this.state.entity_idle)
 
                 }
 
@@ -249,6 +254,28 @@ class ReviewScreen extends Component {
 
   handleChange = (event, value) => {
     this.setState({ value })
+  }
+
+  getFramesByUUID = uuid => {
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
+      .then(res => {
+
+        Object.entries(res.data.frames).forEach(([frame, components], index) => {
+
+          Array.from(
+              new Set(Helpers.htmlize(components).match(/(?<=Backend=")[^"]+/g))
+            ).forEach(backend => {
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/backends/${backend}`)
+              .then(res => this.setState({
+                backends: {...this.state.backends, [backend]: res.data}
+              }))
+            })
+
+        })
+
+        this.setState({ frames: res.data.frames })
+
+    })
   }
 
   consumeMessage = (broker, queue, onMessage) => {
@@ -272,6 +299,7 @@ class ReviewScreen extends Component {
       frames: {},
       uuid: null,
       time_to_expire: 0,
+      customStates: {},
     })
 
     clearTimeout(this.state.timeout)
@@ -287,14 +315,11 @@ class ReviewScreen extends Component {
       const uuid = JSON.parse(first.body).uuid
       this.setState({ uuid })
 
-      axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
-        .then(res => {
-          this.setState({
-            frames: res.data.frames,
-            time_to_expire: this.state.entity_idle,
-          })
-          this.scheduleExpire(this.state.entity_idle)
-        })
+      this.getFramesByUUID(uuid)
+
+      this.setState({ time_to_expire: this.state.entity_idle })
+      this.scheduleExpire(this.state.entity_idle)
+
     }
   }
 
@@ -308,10 +333,20 @@ class ReviewScreen extends Component {
     }
   }
 
+  handleClickOpen = () => {
+    this.setState({ queue_dialog: true })
+  }
+
+  handleClickClose = () => {
+    this.setState({ queue_dialog: false })
+  }
+
   render() {
 
     const { classes } = this.props
     const { value } = this.state
+
+    let { entity, group, queue } = this.props.match.params
 
     if (this.state.expire) {
       return <Redirect to={`/entities/${this.props.match.params.entity}/queues`} query="" />
@@ -324,23 +359,23 @@ class ReviewScreen extends Component {
         <MainBar>
           <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
             <Link
-              to={`/entities/${this.props.match.params.entity}/queues`}
+              to={`/entities/${entity}/queues`}
               query=""
               style={{textDecoration: 'none', color: 'white', height: 24}}
             >
               <ArrowBack onClick={() => {
                 this.setState({expire: true})
-                return <Redirect to={`/entities/${this.props.match.params.entity}/queues`} query="" />
+                return <Redirect to={`/entities/${entity}/queues`} query="" />
               }} />
             </Link>
           </IconButton>
           <div className={classes.queueTitle}>
             <Typography variant="h6" color="inherit" className={classes.grow}>
-              {decodeURIComponent(this.props.match.params.group)}
+              {decodeURIComponent(group)}
             </Typography>
             <ArrowRight className={classes.arrowDivider} />
             <Typography variant="h6" color="inherit" className={classes.grow}>
-              {decodeURIComponent(this.props.match.params.queue)}
+              {decodeURIComponent(queue)}
             </Typography>
           </div>
 
@@ -373,24 +408,30 @@ class ReviewScreen extends Component {
 
           {
 
-            Object.entries(this.state.frames).map(([frame, components], index) =>
-              (
+            Object.entries(this.state.frames).map(([frame, components], index) => {
+
+              var jsx = Helpers.htmlize(components)
+                          .replace(/(With(Fetcher|Action))/g, '$1 uuid={uuid}')
+                          .replace(/(WithAction)/g, '$1 customStates={customStates}')
+                          .replace(/(WithBackend.*?Backend="([^"]+)")/g, '$1 Value={customStates} Values={values} changeBackend={changeBackend}')
+
+              return (
                 value === index &&
                 <TabContainer key={index} id={`cont${index}`}>
                   <JsxParser
                       bindings={{
                         uuid: this.state.uuid,
+                        values: this.state,
+                        customStates: this.state.customStates,
+                        changeBackend: (backend, value) => this.setState({customStates: {...this.state.customStates, [backend]: value}})
                       }}
                       components={All}
-                      jsx={
-                        Helpers
-                          .htmlize(components)
-                          .replace(/(With(Fetcher|Action))/g, '$1 uuid={uuid}')
-                      }
+                      jsx={jsx}
                     />
                 </TabContainer>
               )
-            )
+            }
+          )
 
           }
 
@@ -409,30 +450,60 @@ class ReviewScreen extends Component {
 
           <NativeSelect
             className={classes.moveToQueue}
-            // onChange={(event) => { this.setState({ selectedMoveToQueue: event.target.value })}}
+            onChange={(e) => {
+              this.setState({
+                anchorEl: e.currentTarget,
+                queue_to_move: e.target.value,
+              })
+              this.handleClickOpen()
+            }}
             input={<OutlinedInput labelWidth={0} />}
             name="moveToQueue"
-            // value={this.state.selectedMoveToQueue}
+            value={this.state.queue_to_move || 'move_to_queue'}
           >
 
-            <option hidden >&nbsp;&nbsp;&nbsp;&nbsp;Move to Queue...</option>
+            <option value='move_to_queue' hidden>&nbsp;&nbsp;&nbsp;&nbsp;Move to Queue...</option>
 
             {
               Object.entries(this.state.moving_queues).map(([group, virtual]) =>
                 Object.entries(virtual).map(([vname, queues], _) => !queues ? null :
                   [
                     <option key={_} disabled>{group} - {vname}</option>,
-                    Object.keys(queues || {}).map((queue, _) =>
-                      <option key={_} value={queue}>
+                    Object.keys(queues || {}).map((queue, __) =>
+                      <option key={__} value={queue}>
                         &nbsp;&nbsp;&nbsp;&nbsp;{queue}
                       </option>
                     ),
-                    <option key={`_${_}`} disabled></option>
+                    (_ !== Object.entries(virtual).length - 1
+                      ? <option key={`_${_}`} disabled></option>
+                      : null )
                   ]
                 )).flat()
             }
 
           </NativeSelect>
+
+          <Dialog
+            open={this.state.queue_dialog}
+            onClose={this.handleClickClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">{`Move to Queue`}</DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                Move this {entity} to queue <b>{this.state.queue_to_move}</b>?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.handleClickClose} color="primary">
+                No
+              </Button>
+              <Button onClick={this.handleClickClose} color="primary" autoFocus>
+                Yes
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           <Button
             variant="contained"

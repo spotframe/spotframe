@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-import axios from 'axios'
-
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -62,44 +60,28 @@ const styles = theme => ({
 
 class SelectWithBackend extends Component {
 
-  signal = axios.CancelToken.source()
-
-  state = {
-    value: '',
-    values: {}
-  };
-
   handleChange = event => {
-    this.setState({ value: event.target.value });
-  };
-
-  componentDidMount() {
-      axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/backends/${this.props.Backend}`,
-        { cancelToken: this.signal.token })
-        .then(res => { this.setState({ values: res.data }) })
-        .catch(err => {})
-  }
-
-  componentWillUnmount() {
-    this.signal.cancel()
+    this.props.changeBackend(
+      this.props.Name,
+      event.target.value
+    )
   }
 
   render() {
-    const { classes } = this.props;
+    const { classes } = this.props
 
     return (
       <form className={classes.root} autoComplete="off">
         <FormControl className={classes.margin}>
-          <InputLabel htmlFor="age-customized-native-simple" className={classes.bootstrapFormLabel}>
+          <InputLabel className={classes.bootstrapFormLabel}>
             {this.props.Backend}
           </InputLabel>
           <NativeSelect
-            value={this.state.value}
-            onChange={this.handleChange}
+            value={this.props.Value[this.props.Backend] || this.props.Key}
+            onChange={event => this.handleChange(event)}
             input={<BootstrapInput name={this.props.Backend} id="" />}
           >
-                { Object.entries(this.state.values).map(([key, value], index) =>
+                { Object.entries(this.props.Values.backends[this.props.Backend] || {}).map(([key, value], index) =>
                   <option key={index} value={key}>{value}</option> )}
           </NativeSelect>
         </FormControl>
