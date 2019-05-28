@@ -492,7 +492,7 @@ class ReviewScreen extends Component {
             <DialogTitle id="alert-dialog-title">{`Move to Queue`}</DialogTitle>
             <DialogContent>
               <DialogContentText id="alert-dialog-description">
-                Move this {entity} to queue <b>{this.state.queue_to_move}</b>?
+                Move this {entity} to the <b>{this.state.queue_to_move}</b> queue?
               </DialogContentText>
             </DialogContent>
             <DialogActions>
