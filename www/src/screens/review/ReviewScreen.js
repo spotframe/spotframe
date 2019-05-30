@@ -291,14 +291,28 @@ class ReviewScreen extends Component {
     )
   }
 
-  ackMessage = (message, messages) => {
+  ackMessage = (message, messages, move_to_queue = null) => {
+
+    if (move_to_queue && this.state.broker) {
+      this.state.broker.send(
+        `/queue/${move_to_queue}`,
+        message.body,
+        {
+          priority: 1,
+          persistent: true,
+          ...JSON.parse(message.body)
+        }
+      )
+    }
 
     message.ack()
+
     this.setState({
       message: null,
       frames: {},
       uuid: null,
       time_to_expire: 0,
+      queue_to_move: null,
       customStates: {},
     })
 
@@ -449,6 +463,7 @@ class ReviewScreen extends Component {
         <div className={classes.actionBar}>
 
           <NativeSelect
+            disabled={!this.state.uuid}
             className={classes.moveToQueue}
             onChange={(e) => {
               this.setState({
@@ -499,7 +514,18 @@ class ReviewScreen extends Component {
               <Button onClick={this.handleClickClose} color="primary">
                 No
               </Button>
-              <Button onClick={this.handleClickClose} color="primary" autoFocus>
+              <Button
+                onClick={() => {
+                  this.ackMessage(
+                    this.state.message,
+                    this.state.messages,
+                    this.state.queue_to_move
+                  )
+                  this.handleClickClose()
+                }}
+                color="primary"
+                autoFocus
+              >
                 Yes
               </Button>
             </DialogActions>
