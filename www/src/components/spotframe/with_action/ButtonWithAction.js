@@ -20,7 +20,9 @@ class ButtonWithAction extends Component {
   }
 
   onClick() {
-    axios.post(`${process.env.REACT_APP_BACKEND_URL}/actions/${this.props.Action}/${this.props.uuid}`)
+    axios.post(
+      `${process.env.REACT_APP_BACKEND_URL}/actions/${this.props.Action}/${this.props.uuid}`,
+      this.props.customStates)
       .then(res => {
         this.setState({ once: this.props.Single || false })
       })
