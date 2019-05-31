@@ -31,7 +31,9 @@ class Fetchers(Resource):
 
             params = enhanced.map(
                 fetchers.get(fetch),
-                lambda t: enhanced.translate(t, content.get('payload', {}))
+                lambda t: enhanced.translate(
+                    t, payload=content.get('payload', {})
+                )
             )
 
             provider = params.get('provider')

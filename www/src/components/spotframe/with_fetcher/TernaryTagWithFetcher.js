@@ -16,22 +16,28 @@ const styles = theme => ({
 
 class TernaryTagWithFetcher extends Component {
 
-  signal = axios.CancelToken.source()
+  _isMounted = false
 
   state = {
     response: null,
   }
 
   componentDidMount() {
+    this._isMounted = true
+
     axios.get(
       `${process.env.REACT_APP_BACKEND_URL}/fetchers/${this.props.Fetcher}/${this.props.uuid}`,
-      { cancelToken: this.signal })
-      .then(res => { this.setState({ response: res.data }) })
+      )
+      .then(res => {
+        if (this._isMounted) {
+          this.setState({ response: res.data })
+        }
+      })
       .catch(err => {})
   }
 
   componentWillUnmount() {
-    this.signal.cancel()
+    this._isMounted = false
   }
 
   render() {

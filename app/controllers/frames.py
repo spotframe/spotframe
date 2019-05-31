@@ -36,7 +36,7 @@ class Frames(Resource):
                     screen: enhanced.map(
                         components,
                         lambda t: enhanced.translate(
-                            t, content.get('payload')
+                            t, payload=content.get('payload')
                         )
                     )
                     for screen, components in screens.get(

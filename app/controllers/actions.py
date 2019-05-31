@@ -31,7 +31,11 @@ class Actions(Resource):
 
             params = enhanced.map(
                 actions.get(action),
-                lambda t: enhanced.translate(t, content.get('payload', {}))
+                lambda t: enhanced.translate(
+                    t,
+                    payload=content.get('payload', {}),
+                    changes=request.get_json()
+                )
             )
 
             provider = params.get('provider')

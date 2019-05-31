@@ -1,4 +1,5 @@
 import re
+import jinja2
 
 
 def get(payload, path=str()):
@@ -18,15 +19,10 @@ def get(payload, path=str()):
         return None
 
 
-def translate(text, payload):
+def translate(text, **kwargs):
     return (
-        re.sub(
-            r'{([^}]+)}',
-            lambda m: str(get(payload, m.group(1))),
-            text
-        )
-        if isinstance(text, str)
-        else text
+        jinja2.Template(text).render(**kwargs)
+        if isinstance(text, str) else text
     )
 
 
