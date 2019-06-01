@@ -1,52 +1,44 @@
-/* eslint no-eval: 0 */
 import React, { Component } from 'react'
-import axios from 'axios'
 
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 
 const styles = theme => ({
+  span: {
 
+  }
 });
 
 class TernaryLabelWithFetcher extends Component {
 
-  signal = axios.CancelToken.source()
-
-  state = {
-    response: null,
-  }
-
-  componentDidMount() {
-    axios.get(
-      `${process.env.REACT_APP_BACKEND_URL}/fetchers/${this.props.Fetcher}/${this.props.uuid}`,
-      { cancelToken: this.signal })
-      .then(res => { this.setState({ response: res.data }) })
-      .catch(err => {})
-  }
-
-  componentWillUnmount() {
-    this.signal.cancel()
-  }
-
   render() {
 
-    const content = (
-      ( this.state.response && this.props.GetFrom )
-      ? eval(`this.state.response${this.props.GetFrom}`)
-      : this.state.response
+    const { classes, Fetchers } = this.props
+    const response = Fetchers[this.props.Fetcher]
+
+    const content = String(
+      ( response && this.props.GetFrom )
+      ? window.template.renderString(
+          `{${this.props.GetFrom}}`,
+          { response: response }
+        )
+      : response
     )
 
-    return <span>{(this.props.Equals === content ? this.props.Positive : this.props.Negative)}</span>
+    return <span className={classes.span}>
+      {
+        ( String(this.props.Equals) === content
+        ? this.props.Positive
+        : this.props.Negative )
+      }
+    </span>
 
   }
 }
 
 TernaryLabelWithFetcher.propTypes = {
   classes: PropTypes.object.isRequired,
-  uuid: PropTypes.string.isRequired,
   Fetcher: PropTypes.string.isRequired,
-  Equals: PropTypes.node.isRequired,
   Positive: PropTypes.node.isRequired,
   Negative: PropTypes.node.isRequired,
 }

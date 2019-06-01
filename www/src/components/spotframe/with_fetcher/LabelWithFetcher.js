@@ -1,41 +1,42 @@
-/* eslint no-eval: 0 */
 import React, { Component } from 'react'
-import axios from 'axios'
 
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 
 const styles = theme => ({
+  span: {
 
+  }
 });
 
 class LabelWithFetcher extends Component {
-  state = {
-    response: null,
-  }
-
-  componentDidMount() {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetchers/${this.props.Fetcher}/${this.props.uuid}`)
-      .then(res => { this.setState({ response: res.data }) })
-  }
-
-
 
   render() {
 
+    const { classes, Fetchers } = this.props
+    const response = Fetchers[this.props.Fetcher]
+
     const content = (
-      ( this.state.response && this.props.GetFrom )
-      ? eval(`this.state.response${this.props.GetFrom}`)
-      : this.state.response
+      ( response && this.props.GetFrom )
+      ? window.template.renderString(
+          `{${this.props.GetFrom}}`,
+          { response: response }
+        )
+      : response
     )
 
-    return <span>{content}</span>
+    return (
+      <span className={classes.span}>
+        {content}
+      </span>
+    )
 
   }
 }
 
 LabelWithFetcher.propTypes = {
   classes: PropTypes.object.isRequired,
+  Fetcher: PropTypes.string.isRequired,
 }
 
 export default withStyles(styles)(LabelWithFetcher)

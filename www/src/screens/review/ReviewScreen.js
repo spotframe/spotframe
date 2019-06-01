@@ -149,6 +149,7 @@ class ReviewScreen extends Component {
   state = {
     uuid: null,
     customStates: {},
+    fetchers: {},
     backends: {},
     value: 0,
     message: null,
@@ -165,7 +166,6 @@ class ReviewScreen extends Component {
     moving_queues: {},
     queue_to_move: '',
     queue_dialog: false,
-    placement: null,
   }
 
   componentWillUnmount() {
@@ -263,12 +263,18 @@ class ReviewScreen extends Component {
         Object.entries(res.data.frames).forEach(([frame, components], index) => {
 
           Array.from(
-              new Set(Helpers.htmlize(components).match(/(?<=Backend=")[^"]+/g))
-            ).forEach(backend => {
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/backends/${backend}`)
-              .then(res => this.setState({
-                backends: {...this.state.backends, [backend]: res.data}
-              }))
+              new Set(
+                Helpers.htmlize(components)
+                  .match(/(Fetcher|Backend)="[^"]+"/g)
+                  .map(element => element.split('='))
+                  .map(([type, name]) => [
+                    type.toLowerCase().concat('s'),
+                    name.replace(/"/g, '')
+                  ])
+              )
+            ).forEach(([type, name]) => {
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/${type}/${name}${( type === 'fetchers' ? `/${uuid}` : '')}`)
+              .then(res => this.setState({ [type]: {...this.state[type], [name]: res.data} }))
             })
 
         })
@@ -425,9 +431,9 @@ class ReviewScreen extends Component {
             Object.entries(this.state.frames).map(([frame, components], index) => {
 
               var jsx = Helpers.htmlize(components)
-                          .replace(/(With(Fetcher|Action))/g, '$1 uuid={uuid}')
-                          .replace(/(WithAction)/g, '$1 customStates={customStates}')
-                          .replace(/(WithBackend.*?Backend="([^"]+)")/g, '$1 Value={customStates} Values={values} changeBackend={changeBackend}')
+                          .replace(/(WithAction)/g, '$1 uuid={uuid} customStates={customStates}')
+                          .replace(/(WithFetcher)/g, '$1 Fetchers={fetchers}')
+                          .replace(/(WithBackend.*?Backend="([^"]+)")/g, '$1 Value={customStates} Backends={backends} changeBackend={changeBackend}')
 
               return (
                 value === index &&
@@ -435,9 +441,13 @@ class ReviewScreen extends Component {
                   <JsxParser
                       bindings={{
                         uuid: this.state.uuid,
-                        values: this.state,
+                        fetchers: this.state.fetchers,
+                        backends: this.state.backends,
                         customStates: this.state.customStates,
-                        changeBackend: (backend, value) => this.setState({customStates: {...this.state.customStates, [backend]: value}})
+                        changeBackend: (backend, value) =>
+                          this.setState({
+                            customStates: {...this.state.customStates, [backend]: value}
+                          })
                       }}
                       components={All}
                       jsx={jsx}

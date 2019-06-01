@@ -8,8 +8,11 @@ import EntityScreen from './screens/entities/EntityScreen'
 import QueueScreen from './screens/queues/QueueScreen'
 import ReviewScreen from './screens/review/ReviewScreen'
 
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
-import blue from '@material-ui/core/colors/blue';
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import blue from '@material-ui/core/colors/blue'
+
+import nunjucks from 'nunjucks'
+window.template = nunjucks
 
 const theme = createMuiTheme({
   palette: {

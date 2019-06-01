@@ -81,7 +81,7 @@ class SelectWithBackend extends Component {
             onChange={event => this.handleChange(event)}
             input={<BootstrapInput name={this.props.Backend} id="" />}
           >
-                { Object.entries(this.props.Values.backends[this.props.Backend] || {}).map(([key, value], index) =>
+                { Object.entries(this.props.Backends[this.props.Backend] || {}).map(([key, value], index) =>
                   <option key={index} value={key}>{value}</option> )}
           </NativeSelect>
         </FormControl>

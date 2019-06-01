@@ -1,6 +1,4 @@
-/* eslint no-eval: 0 */
 import React, { Component } from 'react'
-import axios from 'axios'
 
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
@@ -13,53 +11,41 @@ const styles = theme => ({
   },
 })
 
-
 class TernaryTagWithFetcher extends Component {
-
-  _isMounted = false
-
-  state = {
-    response: null,
-  }
-
-  componentDidMount() {
-    this._isMounted = true
-
-    axios.get(
-      `${process.env.REACT_APP_BACKEND_URL}/fetchers/${this.props.Fetcher}/${this.props.uuid}`,
-      )
-      .then(res => {
-        if (this._isMounted) {
-          this.setState({ response: res.data })
-        }
-      })
-      .catch(err => {})
-  }
-
-  componentWillUnmount() {
-    this._isMounted = false
-  }
 
   render() {
 
-    const { classes } = this.props
+    const { classes, Fetchers } = this.props
+    const response = Fetchers[this.props.Fetcher]
 
-    const content = (
-      ( this.state.response && this.props.GetFrom )
-      ? eval(`this.state.response${this.props.GetFrom}`)
-      : this.state.response
+    const content = String(
+      ( response && this.props.GetFrom )
+      ? window.template.renderString(
+          `{${this.props.GetFrom}}`,
+          { response: response }
+        )
+      : response
     )
 
     return (
       <Chip
-        label={(this.props.Equals === content ? this.props.PositiveText : this.props.NegativeText)}
-        style={(this.props.Equals === content ? {
-          color: this.props.PositiveColor,
-          backgroundColor: this.props.PositiveBackgroundColor,
-        } : {
-          color: this.props.NegativeColor,
-          backgroundColor: this.props.NegativeBackgroundColor,
-        })}
+        label={
+          ( String(this.props.Equals) === content
+          ? this.props.PositiveText
+          : this.props.NegativeText )
+        }
+        style={
+          ( String(this.props.Equals) === content
+          ? {
+              color: this.props.PositiveColor,
+              backgroundColor: this.props.PositiveBackgroundColor,
+            }
+          : {
+              color: this.props.NegativeColor,
+              backgroundColor: this.props.NegativeBackgroundColor,
+            }
+          )
+        }
         className={classes.chip} />
     )
 
@@ -68,9 +54,7 @@ class TernaryTagWithFetcher extends Component {
 
 TernaryTagWithFetcher.propTypes = {
   classes: PropTypes.object.isRequired,
-  uuid: PropTypes.string.isRequired,
   Fetcher: PropTypes.string.isRequired,
-  // Equals: PropTypes.node.isRequired,
   PositiveText: PropTypes.node.isRequired,
   NegativeText: PropTypes.node.isRequired,
 }
