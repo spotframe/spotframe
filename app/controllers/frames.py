@@ -1,9 +1,10 @@
-import re
 import json
 import yaml
 
 from flask import request
 from flask_restplus import Namespace, Resource
+
+from db import dsl
 
 import helpers.transformations as enhanced
 
@@ -12,13 +13,6 @@ from .payloads import get_payload_by_uuid
 
 
 api = Namespace('frames', description='Frames Endpoints')
-
-
-screens = {}
-
-with open('./DSL/screens.yaml') as file:
-    screens = yaml.safe_load(file)
-
 
 
 class Frames(Resource):

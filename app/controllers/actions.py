@@ -6,17 +6,12 @@ from flask_restplus import Namespace, Resource
 
 import helpers.transformations as enhanced
 
+from db import dsl
 from providers import *
 from app.models import Payload
 
 
 api = Namespace('actions', description='Actions Endpoints')
-
-actions = {}
-
-with open('./DSL/integrations.yaml') as file:
-    actions = yaml.safe_load(file).get('actions')
-
 
 
 class Actions(Resource):
@@ -30,7 +25,7 @@ class Actions(Resource):
             content = json.loads(payload.payload)
 
             params = enhanced.map(
-                actions.get(action),
+                dsl.file.actions.get(action),
                 lambda t: enhanced.translate(
                     t,
                     payload=content.get('payload', {}),

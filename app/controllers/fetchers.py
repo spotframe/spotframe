@@ -6,17 +6,12 @@ from flask_restplus import Namespace, Resource
 
 import helpers.transformations as enhanced
 
+from db import dsl
 from providers import *
 from app.models import Payload
 
 
 api = Namespace('fetchers', description='Fetchers Endpoints')
-
-fetchers = {}
-
-with open('./DSL/integrations.yaml') as file:
-    fetchers = yaml.safe_load(file).get('fetchers')
-
 
 
 class Fetchers(Resource):
@@ -30,7 +25,7 @@ class Fetchers(Resource):
             content = json.loads(payload.payload)
 
             params = enhanced.map(
-                fetchers.get(fetch),
+                dsl.file.fetchers.get(fetch),
                 lambda t: enhanced.translate(
                     t, payload=content.get('payload', {})
                 )

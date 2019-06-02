@@ -5,6 +5,7 @@ import requests
 from flask import request
 from flask_restplus import Namespace, Resource
 
+from db import dsl
 from db.broker import Broker
 
 import helpers.transformations as enhanced
@@ -17,13 +18,6 @@ broker = Broker(
     username=os.getenv('BROKER_USER'),
     password=os.getenv('BROKER_PASS'),
 )
-
-queues = {}
-
-
-with open('./DSL/queues.yaml') as file:
-    queues = yaml.safe_load(file)
-
 
 
 class Queues(Resource):
@@ -53,13 +47,13 @@ class Queues(Resource):
                 else None
                 for vname, physics in virtual.items()
             }
-            for group, virtual in queues.get(entity, {}).items()
+            for group, virtual in dsl.file.queues.get(entity, {}).items()
         }
 
 
         listed = [
             list(virtual.values())
-            for group, virtual in queues.get(entity, {}).items()
+            for group, virtual in dsl.file.queues.get(entity, {}).items()
         ]
 
         missing = list(

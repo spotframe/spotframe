@@ -6,7 +6,7 @@ import yaml
 from flask import Flask
 from flask_cors import CORS
 
-from db import orm, broker
+from db import dsl, orm, broker
 from app.controllers import api
 
 app = Flask(__name__)
@@ -14,10 +14,10 @@ CORS(app)
 
 api.init_app(app)
 orm.init_app(app)
+dsl.init_app(app)
 
 
-with open('./DSL/entities.yaml') as file:
-
+try:
     _broker = broker.Broker(
         host=os.getenv('BROKER_HOST'),
         port=os.getenv('BROKER_PORT'),
@@ -25,8 +25,11 @@ with open('./DSL/entities.yaml') as file:
         password=os.getenv('BROKER_PASS')
     )
 
-    for entity in list(yaml.safe_load(file).keys()):
+    for entity in list(dsl.file.entities.keys()):
         _broker.create_vhost(entity)
+
+except Exception:
+    pass
 
 
 if __name__ == '__main__':
