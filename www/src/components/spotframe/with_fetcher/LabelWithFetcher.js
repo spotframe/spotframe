@@ -19,7 +19,7 @@ class LabelWithFetcher extends Component {
     const content = (
       ( response && this.props.GetFrom )
       ? window.template.renderString(
-          `{${this.props.GetFrom}}`,
+          this.props.GetFrom,
           { response: response }
         )
       : response

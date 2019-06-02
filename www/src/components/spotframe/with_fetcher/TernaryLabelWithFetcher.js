@@ -19,7 +19,7 @@ class TernaryLabelWithFetcher extends Component {
     const content = String(
       ( response && this.props.GetFrom )
       ? window.template.renderString(
-          `{${this.props.GetFrom}}`,
+          this.props.GetFrom,
           { response: response }
         )
       : response

@@ -30,10 +30,11 @@ class Frames(Resource):
                     screen: enhanced.map(
                         components,
                         lambda t: enhanced.translate(
-                            t, payload=content.get('payload')
+                            t, payload=content.get('payload'),
+                            except_pattern=r'{{[^.]*?response'
                         )
                     )
-                    for screen, components in screens.get(
+                    for screen, components in dsl.file.screens.get(
                         content.get('entity')
                     ).items()
                 }

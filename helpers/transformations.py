@@ -19,10 +19,12 @@ def get(payload, path=str()):
         return None
 
 
-def translate(text, **kwargs):
+def translate(text, except_pattern=str(), **kwargs):
     return (
         jinja2.Template(text).render(**kwargs)
-        if isinstance(text, str) else text
+        if isinstance(text, str)
+        and not re.match(except_pattern, text)
+        else text
     )
 
 
