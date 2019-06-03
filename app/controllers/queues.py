@@ -24,6 +24,12 @@ class Queues(Resource):
 
     def get(self, entity):
         """Get Queues"""
+
+        queues = (
+            dsl.file.queues.get(entity, {})
+            if dsl.file.queues else {}
+        )
+
         status = {
             queue.get('name'): {
                 'messages': queue.get('messages'),
@@ -45,15 +51,15 @@ class Queues(Resource):
                 }
                 if physics
                 else None
-                for vname, physics in virtual.items()
+                for vname, physics in (virtual or {}).items()
             }
-            for group, virtual in dsl.file.queues.get(entity, {}).items()
+            for group, virtual in queues.items()
         }
 
 
         listed = [
             list(virtual.values())
-            for group, virtual in dsl.file.queues.get(entity, {}).items()
+            for group, virtual in queues.items()
         ]
 
         missing = list(
@@ -68,7 +74,7 @@ class Queues(Resource):
             }
         }
 
-        return {**feeded, **to_merge}
+        return {**feeded, **(to_merge if missing else dict())}
 
 
 api.add_resource(
