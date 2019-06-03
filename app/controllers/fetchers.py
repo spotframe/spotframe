@@ -25,7 +25,7 @@ class Fetchers(Resource):
             content = json.loads(payload.payload)
 
             params = enhanced.map(
-                dsl.file.fetchers.get(fetch),
+                dsl.file.integrations.get('fetchers').get(fetch),
                 lambda t: enhanced.translate(
                     t, payload=content.get('payload', {})
                 )

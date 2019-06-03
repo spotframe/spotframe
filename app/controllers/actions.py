@@ -25,7 +25,7 @@ class Actions(Resource):
             content = json.loads(payload.payload)
 
             params = enhanced.map(
-                dsl.file.actions.get(action),
+                dsl.file.integrations.get('actions').get(action),
                 lambda t: enhanced.translate(
                     t,
                     payload=content.get('payload', {}),
