@@ -7,12 +7,21 @@ import webstomp from 'webstomp-client'
 
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
+import { fade } from '@material-ui/core/styles/colorManipulator'
 
 import IconButton from '@material-ui/core/IconButton'
 import ArrowBack from '@material-ui/icons/ArrowBack'
 import ArrowRight from '@material-ui/icons/ArrowRight'
 import ChevronRight from '@material-ui/icons/ChevronRight'
 import Inbox from '@material-ui/icons/Inbox'
+import WebAsset from '@material-ui/icons/WebAsset'
+import AccountCircle from '@material-ui/icons/AccountCircle'
+import Mail from '@material-ui/icons/Mail'
+import ShutterSpeed from '@material-ui/icons/ShutterSpeed'
+import SwapHoriz from '@material-ui/icons/SwapHoriz'
+import NotificationsActive from '@material-ui/icons/NotificationsActive'
+import BlurOn from '@material-ui/icons/BlurOn'
+import Layers from '@material-ui/icons/Layers'
 
 import MainBar from '../../components/MainBar'
 import TimeoutBar from '../../components/TimeoutBar'
@@ -22,8 +31,8 @@ import Tab from '@material-ui/core/Tab'
 import Tabs from '@material-ui/core/Tabs'
 import Typography from '@material-ui/core/Typography'
 import NoSsr from '@material-ui/core/NoSsr'
-import NativeSelect from '@material-ui/core/NativeSelect'
-import OutlinedInput from '@material-ui/core/OutlinedInput'
+import Select from '@material-ui/core/Select'
+import MenuItem from '@material-ui/core/MenuItem'
 
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -38,7 +47,7 @@ import All from '../../components/spotframe/All'
 const styles = theme => ({
   root: {
     flexGrow: 1,
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: '#f6f6f6',
   },
   tabsRoot: {
     borderBottom: '1px solid #e8e8e8',
@@ -77,9 +86,14 @@ const styles = theme => ({
   },
   tabSelected: {},
 
+  padding: {
+    paddingLeft: 10,
+  },
+
   grow: {
     flexGrow: 1,
   },
+
   menuButton: {
     marginLeft: -12,
     marginRight: 20,
@@ -89,20 +103,37 @@ const styles = theme => ({
     marginLeft: theme.spacing.unit,
   },
 
-  button: {
-    margin: theme.spacing.unit,
-  },
-
   actionBar: {
     display: 'flex',
+    flexGrow: 1,
     justifyContent: 'flex-end',
-    marginTop: 10,
-    marginRight: 10
+  },
+
+  nextMessageButton: {
+    margin: theme.spacing.unit,
+    backgroundColor: 'black',
+    color: 'powderblue',
+    '&:hover': {
+      color: 'mediumspringgreen',
+      backgroundColor: 'black',
+    },
   },
 
   moveToQueue: {
     width: 250,
     margin: 8,
+    position: 'relative',
+    fontSize: '0.875rem',
+    fontFamily: "Roboto",
+    fontWeight: 500,
+    color: 'powderblue',
+    letterSpacing: '0.02857em',
+    borderRadius: theme.shape.borderRadius,
+    borderBottom: 0,
+    backgroundColor: fade(theme.palette.common.white, 0.15),
+    '&:hover:enabled': {
+      backgroundColor: fade(theme.palette.common.white, 0.25),
+    },
   },
 
   noMessages: {
@@ -132,7 +163,7 @@ const styles = theme => ({
 
 function TabContainer(props) {
   return (
-    <Typography component="div" style={{ padding: 8 * 3 }}>
+    <Typography component="div" style={{ padding: 0 }}>
       {props.children}
     </Typography>
   )
@@ -400,6 +431,114 @@ class ReviewScreen extends Component {
           </div>
 
 
+          <div className={classes.actionBar}>
+
+            <Select
+              disableUnderline
+              disabled={!this.state.uuid}
+              className={classes.moveToQueue}
+              onChange={(e) => {
+                this.setState({
+                  queue_to_move: e.target.value,
+                })
+                this.handleClickOpen()
+              }}
+              name="moveToQueue"
+              renderValue={value =>
+                <div style={{display: 'flex', alignItems: 'center'}}>
+                  <SwapHoriz className={classes.padding} />
+                  <span style={{paddingLeft: 7}}>{value}</span>
+                </div>
+              }
+              value={this.state.queue_to_move || 'MOVE TO QUEUE'}
+            >
+
+              {
+                Object.entries(this.state.moving_queues).map(([group, virtual]) =>
+                  Object.entries(virtual).map(([vname, queues], _) => !queues ? null :
+                    [
+                      <MenuItem key={_} disabled>
+                        <BlurOn />
+                        <div
+                          className={classes.padding}
+                          style={{display: 'flex', alignItems: 'center'}}
+                        >
+                          {group}
+                          <ArrowRight style={{fontSize: 18, color: '#bbb'}} />
+                          {vname}
+                        </div>
+                      </MenuItem>,
+                      Object.keys(queues || {}).map((queue, __) =>
+                        <MenuItem key={__} value={queue}>
+                          <Layers style={{paddingLeft: 32}} />
+                          <span className={classes.padding}>{queue}</span>
+                        </MenuItem>
+                      ),
+                    ]
+                  )).flat()
+              }
+
+            </Select>
+
+            <Dialog
+              open={this.state.queue_dialog}
+              onClose={this.handleClickClose}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+            >
+              <DialogTitle id="alert-dialog-title">{`Move to Queue`}</DialogTitle>
+              <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                  Move this {entity} to the <b>{this.state.queue_to_move}</b> queue?
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={this.handleClickClose} color="primary">
+                  No
+                </Button>
+                <Button
+                  onClick={() => {
+                    this.ackMessage(
+                      this.state.message,
+                      this.state.messages,
+                      this.state.queue_to_move
+                    )
+                    this.handleClickClose()
+                  }}
+                  color="primary"
+                  autoFocus
+                >
+                  Yes
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            <Button
+              variant="contained"
+              disabled={this.state.message === null}
+              className={classes.nextMessageButton}
+              onClick={() => this.ackMessage(this.state.message, this.state.messages)}
+            >
+              Next {Helpers.titleize(this.props.match.params.entity)} <ChevronRight />
+            </Button>
+
+          </div>
+
+          <div>
+            <IconButton disabled color="inherit" aria-label="Menu">
+                <ShutterSpeed />
+            </IconButton>
+
+            <IconButton disabled color="inherit" aria-label="Menu">
+                <NotificationsActive />
+            </IconButton>
+
+            <IconButton disabled color="inherit" aria-label="Menu">
+                <AccountCircle />
+            </IconButton>
+          </div>
+
+
         </MainBar>
 
         { /* Meanwhile we need to keep these 2 calls, don't use ternary neither coalesce here */ }
@@ -407,6 +546,7 @@ class ReviewScreen extends Component {
         { !this.state.time_to_expire ? <TimeoutBar seconds={0} /> : null }
 
         <div className={classes.root}>
+
           <Tabs
             value={value}
             onChange={this.handleChange}
@@ -419,7 +559,12 @@ class ReviewScreen extends Component {
                 key={index}
                 disableRipple
                 classes={{ root: classes.tabRoot, selected: classes.tabSelected }}
-                label={Helpers.titleize(frame)}
+                label={
+                  <div style={{display: 'flex'}}>
+                    <WebAsset />
+                    <span style={{marginLeft: 10, fontSize: '0.8650rem'}}>{Helpers.titleize(frame)}</span>
+                  </div>
+                }
               />
             )
           }
@@ -467,89 +612,6 @@ class ReviewScreen extends Component {
               </Typography>
             </div>
             : null) }
-
-        </div>
-
-        <div className={classes.actionBar}>
-
-          <NativeSelect
-            disabled={!this.state.uuid}
-            className={classes.moveToQueue}
-            onChange={(e) => {
-              this.setState({
-                anchorEl: e.currentTarget,
-                queue_to_move: e.target.value,
-              })
-              this.handleClickOpen()
-            }}
-            input={<OutlinedInput labelWidth={0} />}
-            name="moveToQueue"
-            value={this.state.queue_to_move || 'move_to_queue'}
-          >
-
-            <option value='move_to_queue' hidden>&nbsp;&nbsp;&nbsp;&nbsp;Move to Queue...</option>
-
-            {
-              Object.entries(this.state.moving_queues).map(([group, virtual]) =>
-                Object.entries(virtual).map(([vname, queues], _) => !queues ? null :
-                  [
-                    <option key={_} disabled>{group} - {vname}</option>,
-                    Object.keys(queues || {}).map((queue, __) =>
-                      <option key={__} value={queue}>
-                        &nbsp;&nbsp;&nbsp;&nbsp;{queue}
-                      </option>
-                    ),
-                    (_ !== Object.entries(virtual).length - 1
-                      ? <option key={`_${_}`} disabled></option>
-                      : null )
-                  ]
-                )).flat()
-            }
-
-          </NativeSelect>
-
-          <Dialog
-            open={this.state.queue_dialog}
-            onClose={this.handleClickClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">{`Move to Queue`}</DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                Move this {entity} to the <b>{this.state.queue_to_move}</b> queue?
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={this.handleClickClose} color="primary">
-                No
-              </Button>
-              <Button
-                onClick={() => {
-                  this.ackMessage(
-                    this.state.message,
-                    this.state.messages,
-                    this.state.queue_to_move
-                  )
-                  this.handleClickClose()
-                }}
-                color="primary"
-                autoFocus
-              >
-                Yes
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={this.state.message === null}
-            className={classes.button}
-            onClick={() => this.ackMessage(this.state.message, this.state.messages)}
-          >
-            Next {Helpers.titleize(this.props.match.params.entity)} <ChevronRight />
-          </Button>
 
         </div>
 

@@ -1,9 +1,15 @@
-import HeaderH2 from './commons/HeaderH2'
-import Row from './commons/Row'
-import Column from './commons/Column'
+import Backgrounds from './commons/Background'
+import Margins from './commons/Margin'
+import Paddings from './commons/Padding'
+import Grids from './commons/Grid'
+import Views from './commons/View'
+import Columns from './commons/Column'
+import Headers from './commons/Header'
+
 import Link from './commons/Link'
 import BreakLine from './commons/BreakLine'
 import Tag from './commons/Tag'
+import Paper from './commons/Paper'
 
 import SelectWithBackend from './with_backend/SelectWithBackend'
 
@@ -14,12 +20,18 @@ import TernaryTagWithFetcher from './with_fetcher/TernaryTagWithFetcher'
 import ButtonWithAction from './with_action/ButtonWithAction'
 
 const All = {
-	HeaderH2,
-	Row,
-	Column,
+	...Backgrounds,
+	...Margins,
+	...Paddings,
+	...Grids,
+	...Views,
+	...Columns,
+	...Headers,
+
 	Link,
 	BreakLine,
 	Tag,
+	Paper,
 
 	SelectWithBackend,
 

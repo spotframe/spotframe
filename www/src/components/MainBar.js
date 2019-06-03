@@ -9,6 +9,10 @@ const styles = {
   root: {
     flexGrow: 1,
   },
+  toolbar: {
+    // margin: 0,
+    paddingRight: 10
+  }
 
 };
 
@@ -22,7 +26,7 @@ class MainBar extends Component {
     return (
         <div className={classes.root}>
           <AppBar position="static" color="primary">
-            <Toolbar variant="dense">
+            <Toolbar className={classes.toolbar} variant="dense">
               {this.props.children}
             </Toolbar>
           </AppBar>
