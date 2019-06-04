@@ -3,10 +3,12 @@ import Margins from './commons/Margin'
 import Paddings from './commons/Padding'
 import Grids from './commons/Grid'
 import Views from './commons/View'
-import Columns from './commons/Column'
 import Headers from './commons/Header'
 
+import Text from './commons/Text'
+import Font from './commons/Font'
 import Link from './commons/Link'
+import ImageGallery from './commons/ImageGallery'
 import BreakLine from './commons/BreakLine'
 import Tag from './commons/Tag'
 import Paper from './commons/Paper'
@@ -25,10 +27,12 @@ const All = {
 	...Paddings,
 	...Grids,
 	...Views,
-	...Columns,
 	...Headers,
 
+	Text,
+	Font,
 	Link,
+	ImageGallery,
 	BreakLine,
 	Tag,
 	Paper,

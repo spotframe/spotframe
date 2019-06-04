@@ -294,7 +294,7 @@ class ReviewScreen extends Component {
 
           Array.from(
             new Set(
-              ([] || Helpers.htmlize(components).match(/(Fetcher|Backend)="[^"]+"/g))
+              (Helpers.htmlize(components).match(/(Fetcher|Backend)="[^"]+"/g) || [])
                 .map(element => element.split('='))
                 .map(([type, name]) => [ type.toLowerCase().concat('s'), name.replace(/"/g, '') ])
             )

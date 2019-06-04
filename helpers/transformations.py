@@ -1,5 +1,7 @@
 import re
+import json
 from operator import xor
+from ast import literal_eval
 
 import jinja2
 
@@ -21,12 +23,20 @@ def get(payload, path=str()):
         return None
 
 
-def translate(text, except_pattern=str(), **kwargs):
-    if xor(not isinstance(text, str),
-        except_pattern and re.match(except_pattern, text)):
-        return text
+def translate(struct, except_pattern=None, **kwargs):
+    if xor(not isinstance(struct, str),
+        bool(except_pattern and re.match(except_pattern, struct))):
+        return struct
 
-    return jinja2.Template(text).render(**kwargs)
+    evaluated = None
+    translated = jinja2.Template(struct).render(**kwargs)
+
+    try:
+        evaluated = literal_eval(translated)
+        return json.dumps(evaluated) if type(evaluated) in {dict, list} else evaluated
+    except Exception:
+        return translated
+
 
 
 def map(data, fn):

@@ -25,8 +25,16 @@ const htmlize = (data) => {
                 else {
                     switch (typeof(v)) {
                         case "object": {
-                            let props = Object.entries(v).map(([key, value]) =>
-                                `${key}=${(typeof(value) === 'boolean' ? `{${value}}` : `"${value}"`)} `
+                            let props = Object.entries(v).map(([key, value]) => {
+                                let jsonified = false
+                                try {
+                                    JSON.parse(value)
+                                    jsonified = true
+                                }
+                                catch(error) {
+                                }
+                                return `${key}=${(jsonified || typeof(value) === 'boolean' ? `{${value}}` : `"${value}"`)} `
+                            }
                             ).join('')
 
                             output.push(`<${k} ${props}/>`)
