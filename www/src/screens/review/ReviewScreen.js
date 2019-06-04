@@ -16,7 +16,6 @@ import ChevronRight from '@material-ui/icons/ChevronRight'
 import Inbox from '@material-ui/icons/Inbox'
 import WebAsset from '@material-ui/icons/WebAsset'
 import AccountCircle from '@material-ui/icons/AccountCircle'
-import Mail from '@material-ui/icons/Mail'
 import ShutterSpeed from '@material-ui/icons/ShutterSpeed'
 import SwapHoriz from '@material-ui/icons/SwapHoriz'
 import NotificationsActive from '@material-ui/icons/NotificationsActive'
@@ -34,11 +33,11 @@ import NoSsr from '@material-ui/core/NoSsr'
 import Select from '@material-ui/core/Select'
 import MenuItem from '@material-ui/core/MenuItem'
 
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Dialog from '@material-ui/core/Dialog'
+import DialogActions from '@material-ui/core/DialogActions'
+import DialogContent from '@material-ui/core/DialogContent'
+import DialogContentText from '@material-ui/core/DialogContentText'
+import DialogTitle from '@material-ui/core/DialogTitle'
 
 import JsxParser from 'react-jsx-parser'
 import All from '../../components/spotframe/All'
@@ -294,19 +293,15 @@ class ReviewScreen extends Component {
         Object.entries(res.data.frames).forEach(([frame, components], index) => {
 
           Array.from(
-              new Set(
-                Helpers.htmlize(components)
-                  .match(/(Fetcher|Backend)="[^"]+"/g)
-                  .map(element => element.split('='))
-                  .map(([type, name]) => [
-                    type.toLowerCase().concat('s'),
-                    name.replace(/"/g, '')
-                  ])
-              )
-            ).forEach(([type, name]) => {
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/${type}/${name}${( type === 'fetchers' ? `/${uuid}` : '')}`)
-              .then(res => this.setState({ [type]: {...this.state[type], [name]: res.data} }))
-            })
+            new Set(
+              ([] || Helpers.htmlize(components).match(/(Fetcher|Backend)="[^"]+"/g))
+                .map(element => element.split('='))
+                .map(([type, name]) => [ type.toLowerCase().concat('s'), name.replace(/"/g, '') ])
+            )
+          ).forEach(([type, name]) => {
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/${type}/${name}${( type === 'fetchers' ? `/${uuid}` : '')}`)
+            .then(res => this.setState({ [type]: {...this.state[type], [name]: res.data} }))
+          })
 
         })
 
@@ -519,7 +514,7 @@ class ReviewScreen extends Component {
               className={classes.nextMessageButton}
               onClick={() => this.ackMessage(this.state.message, this.state.messages)}
             >
-              Next {Helpers.titleize(this.props.match.params.entity)} <ChevronRight />
+              Commit {Helpers.titleize(this.props.match.params.entity)} <ChevronRight />
             </Button>
 
           </div>
@@ -623,6 +618,6 @@ class ReviewScreen extends Component {
 
 ReviewScreen.propTypes = {
   classes: PropTypes.object.isRequired,
-};
+}
 
 export default withStyles(styles)(ReviewScreen)

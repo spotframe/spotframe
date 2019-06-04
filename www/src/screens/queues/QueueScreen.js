@@ -42,7 +42,7 @@ const styles = theme => ({
   },
   heading: {
     fontSize: theme.typography.pxToRem(15),
-    flexBasis: '33.33%',
+    flexBasis: '45%',
     flexShrink: 0,
   },
   secondaryHeading: {
@@ -64,7 +64,7 @@ const styles = theme => ({
     marginLeft: 30,
     color: '#999'
   }
-});
+})
 
 
 const StyledBadge = withStyles(theme => ({
@@ -76,7 +76,7 @@ const StyledBadge = withStyles(theme => ({
       theme.palette.type === 'light' ? theme.palette.grey[200] : theme.palette.grey[900]
     }`,
   },
-}))(Badge);
+}))(Badge)
 
 
 
@@ -91,8 +91,8 @@ class QueueScreen extends Component {
   handleChange = panel => (event, expanded) => {
     this.setState({
       expanded: expanded ? panel : false,
-    });
-  };
+    })
+  }
 
   componentWillUnmount() {
     clearInterval(this.state.interval)
@@ -207,6 +207,6 @@ class QueueScreen extends Component {
 
 QueueScreen.propTypes = {
   classes: PropTypes.object.isRequired,
-};
+}
 
 export default withStyles(styles)(QueueScreen)

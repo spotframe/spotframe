@@ -1,4 +1,6 @@
 import re
+from operator import xor
+
 import jinja2
 
 
@@ -20,12 +22,11 @@ def get(payload, path=str()):
 
 
 def translate(text, except_pattern=str(), **kwargs):
-    return (
-        jinja2.Template(text).render(**kwargs)
-        if isinstance(text, str)
-        and not re.match(except_pattern, text)
-        else text
-    )
+    if xor(not isinstance(text, str),
+        except_pattern and re.match(except_pattern, text)):
+        return text
+
+    return jinja2.Template(text).render(**kwargs)
 
 
 def map(data, fn):
