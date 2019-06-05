@@ -290,19 +290,17 @@ class ReviewScreen extends Component {
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/frames/${uuid}`)
       .then(res => {
 
-        Object.entries(res.data.frames).forEach(([frame, components], index) => {
-
-          Array.from(
-            new Set(
-              (Helpers.htmlize(components).match(/(Fetcher|Backend)="[^"]+"/g) || [])
-                .map(element => element.split('='))
-                .map(([type, name]) => [ type.toLowerCase().concat('s'), name.replace(/"/g, '') ])
-            )
-          ).forEach(([type, name]) => {
+        Object.values(Object.fromEntries(Object.entries(res.data.frames)
+          .map(([frame, components], index) =>
+            (Helpers.htmlize(components).match(/(Fetcher|Backend)="[^"]+"/g) || [])
+              .map(element => element.split('='))
+              .map(([type, name]) => [ type.toLowerCase().concat('s'), name.replace(/"/g, '') ])
+          )
+          .flat().map(request => [String(request), request])
+        ))
+        .forEach(([type, name]) => {
           axios.get(`${process.env.REACT_APP_BACKEND_URL}/${type}/${name}${( type === 'fetchers' ? `/${uuid}` : '')}`)
             .then(res => this.setState({ [type]: {...this.state[type], [name]: res.data} }))
-          })
-
         })
 
         this.setState({ frames: res.data.frames })
