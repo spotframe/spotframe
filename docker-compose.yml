@@ -1,4 +1,4 @@
-version: '3'
+version: '2.1'
 services:
 
   postgres:
@@ -11,6 +11,11 @@ services:
       - POSTGRES_DB=spotframe
     volumes:
       - ./tmp/pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spotframe"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   rabbitmq:
     image: rabbitmq:3.7.14-management-alpine
@@ -18,8 +23,19 @@ services:
       - 5672:5672
       - 15672:15672
       - 15674:15674
+    command:
+      - sh
+      - -c
+      - |
+        rabbitmq-plugins enable rabbitmq_web_stomp
+        docker-entrypoint.sh rabbitmq-server
     volumes:
       - ./tmp/amnesia:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics node_health_check"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   migrate:
     image: spotframe
@@ -36,6 +52,9 @@ services:
       - DB_NAME=spotframe
     volumes:
       - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   api:
     image: spotframe
@@ -54,10 +73,18 @@ services:
       - DB_PASS=spotframe
       - DB_NAME=spotframe
       - BROKER_HOST=rabbitmq
+      - BROKER_PORT=5672
       - BROKER_USER=guest
       - BROKER_PASS=guest
     volumes:
       - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   crontab:
     image: spotframe
@@ -74,4 +101,9 @@ services:
       - DB_NAME=spotframe
     volumes:
       - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_started
 
